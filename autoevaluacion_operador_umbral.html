@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autoevaluación del Operador · Proyecto Umbral</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #534AB7;
+    --purple-dark: #3C3489;
+    --purple-light: #EEEDFE;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --text-faint: #999;
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HERO */
+  .hero {
+    background: #0e0c1e;
+    color: #fff;
+    padding: 72px 24px 64px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 120%, #534AB740 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #AFA9EC;
+    margin-bottom: 20px;
+    border: 0.5px solid #534AB770;
+    padding: 5px 14px;
+    border-radius: 999px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 6vw, 54px);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 18px;
+    color: #fff;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: #AFA9EC;
+  }
+  .hero-sub {
+    font-size: 16px;
+    color: #ffffffaa;
+    max-width: 480px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .hero-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .hero-meta span {
+    font-size: 13px;
+    color: #ffffff60;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero-meta span::before {
+    content: '·';
+    color: #534AB7;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .hero-meta span:first-child::before { display: none; }
+
+  /* MAIN CONTAINER */
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-bottom: 32px;
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .progress-count {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .progress-bar {
+    background: #e8e6f0;
+    border-radius: 999px;
+    height: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 4px;
+    background: var(--purple);
+    border-radius: 999px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* DIMENSION HEADER */
+  .dim-header {
+    margin-bottom: 24px;
+  }
+  .dim-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--purple);
+    background: var(--purple-light);
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .dim-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  /* QUESTION CARDS */
+  .question-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 22px 18px;
+    margin-bottom: 14px;
+    transition: border-color .15s;
+  }
+  .question-card:hover { border-color: var(--border-strong); }
+  .question-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border);
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: all .15s;
+    user-select: none;
+    font-weight: 300;
+  }
+  .opt:hover { border-color: var(--purple); color: var(--text); background: #fafaff; }
+  .opt.selected { border-color: var(--purple); background: var(--purple-light); color: var(--purple-dark); font-weight: 400; }
+  .opt input { accent-color: var(--purple); flex-shrink: 0; }
+
+  /* NAV BUTTONS */
+  .nav {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .btn {
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-strong);
+    background: transparent;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 400;
+  }
+  .btn:hover { background: #f0f0f0; }
+  .btn:disabled { opacity: .3; cursor: default; }
+  .btn.primary {
+    background: var(--purple);
+    color: #fff;
+    border-color: var(--purple);
+    font-weight: 500;
+  }
+  .btn.primary:hover { background: var(--purple-dark); }
+
+  /* PAUSE SCREENS */
+  .pause-screen {
+    display: none;
+    padding: 60px 0;
+    text-align: center;
+  }
+  .pause-num {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 28px;
+  }
+  .pause-line {
+    width: 40px;
+    height: 2px;
+    background: var(--purple);
+    margin: 0 auto 28px;
+    border-radius: 2px;
+  }
+  .pause-dim-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--purple);
+    background: var(--purple-light);
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 24px;
+  }
+  .pause-q {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.4;
+    max-width: 520px;
+    margin: 0 auto 20px;
+  }
+  .pause-body {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.75;
+    max-width: 440px;
+    margin: 0 auto 36px;
+    font-weight: 300;
+  }
+  .pause-continue {
+    display: inline-block;
+    padding: 13px 30px;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .pause-continue:hover { background: var(--purple-dark); }
+
+  /* RESULT */
+  .result-wrap { display: none; }
+
+  .result-hero {
+    text-align: center;
+    padding: 48px 0 36px;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .score-ring {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 3px solid var(--purple);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0 auto 20px;
+    transition: border-color .4s;
+  }
+  .score-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 34px;
+    color: var(--purple);
+    line-height: 1;
+    transition: color .4s;
+  }
+  .score-label {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 2px;
+  }
+  .phase-tag {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+  .phase-verde { background: var(--green-bg); color: var(--green); }
+  .phase-ambar { background: var(--amber-bg); color: var(--amber); }
+  .phase-rojo { background: var(--red-bg); color: var(--red); }
+  .phase-desc {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 460px;
+    margin: 0 auto;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* DIM GRID */
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 16px;
+  }
+  .dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+  .dim-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .dim-name {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .dim-bar-bg {
+    background: #f0eef8;
+    border-radius: 999px;
+    height: 5px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .dim-bar {
+    height: 5px;
+    border-radius: 999px;
+  }
+  .dim-pct {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  /* INSIGHTS */
+  .insight-box {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-left: 3px solid var(--purple);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .insight-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .insight-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .closing-note {
+    background: #f4f2fc;
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-top: 28px;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 24px;
+    border-top: 0.5px solid var(--border);
+    margin-top: 0;
+  }
+  .footer p {
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: .04em;
+  }
+
+  @media (max-width: 480px) {
+    .dim-grid { grid-template-columns: 1fr; }
+    .hero { padding: 52px 20px 48px; }
+    .container { padding: 36px 18px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Proyecto Umbral</div>
+  <h1>¿Cuáles son<br><em>tus grietas</em>?</h1>
+  <p class="hero-sub">Una autoevaluación honesta para el operador que construye, dirige y carga con más de lo que admite.</p>
+  <div class="hero-meta">
+    <span>26 preguntas</span>
+    <span>9 dimensiones</span>
+    <span>~4 minutos</span>
+    <span>Diagnóstico inmediato</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- QUIZ -->
+  <div id="quiz-section">
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label" id="sec-label">Dimensión 1 de 9</span>
+        <span class="progress-count" id="prog-count">0 / 9</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="pbar" style="width:0%"></div></div>
+    </div>
+    <div class="dim-header">
+      <div class="dim-tag" id="dim-tag">Salud</div>
+      <div class="dim-title" id="dim-title">Tu cuerpo bajo presión</div>
+    </div>
+    <div id="q-container"></div>
+    <div class="nav">
+      <button class="btn" id="btn-prev" onclick="prevStep()" disabled>← Anterior</button>
+      <button class="btn primary" id="btn-next" onclick="nextStep()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- PAUSA 1 -->
+  <div class="pause-screen" id="pause-1">
+    <div class="pause-num">Pausa · 1 de 3</div>
+    <div class="pause-line"></div>
+    <div class="pause-dim-tag">Salud · Familia · Negocio</div>
+    <div class="pause-q">¿Cuándo fue la última vez que tu cuerpo y tu familia recibieron lo que realmente necesitaban de ti?</div>
+    <div class="pause-body">El operador aprende a ignorar las señales. Primero las del cuerpo. Después las de las personas que ama. Luego ya no las escucha.<br><br>Esta evaluación existe para que vuelvas a escuchar.</div>
+    <button class="pause-continue" onclick="resumeFromPause()">Continuar →</button>
+  </div>
+
+  <!-- PAUSA 2 -->
+  <div class="pause-screen" id="pause-2">
+    <div class="pause-num">Pausa · 2 de 3</div>
+    <div class="pause-line"></div>
+    <div class="pause-dim-tag">Mente · Dinero · Identidad</div>
+    <div class="pause-q">Si mañana desapareciera todo lo que construiste, ¿sabrías quién eres?</div>
+    <div class="pause-body">Muchos operadores descubren que su identidad y su negocio se fusionaron sin darse cuenta. Eso no es fortaleza — es fragilidad.<br><br>Saber quién eres fuera de tu rol es una de las protecciones más poderosas que existen.</div>
+    <button class="pause-continue" onclick="resumeFromPause()">Continuar →</button>
+  </div>
+
+  <!-- PAUSA 3 -->
+  <div class="pause-screen" id="pause-3">
+    <div class="pause-num">Pausa · 3 de 3</div>
+    <div class="pause-line"></div>
+    <div class="pause-dim-tag">Propósito · Caída · Confianza</div>
+    <div class="pause-q">¿Estás construyendo hacia algo que todavía tiene sentido para ti?</div>
+    <div class="pause-body">El operador que perdió el propósito sigue trabajando por inercia. El que cayó y no procesó esa caída opera con miedo disfrazado de precaución.<br><br>Reconocerlo es el primer movimiento real hacia la reconstrucción.</div>
+    <button class="pause-continue" onclick="resumeFromPause()">Continuar →</button>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="result-wrap" id="result-section">
+    <div class="result-hero">
+      <div class="score-ring" id="score-ring">
+        <div class="score-num" id="score-num">0</div>
+        <div class="score-label">de 100</div>
+      </div>
+      <div class="phase-tag" id="phase-tag">—</div>
+      <p class="phase-desc" id="phase-desc"></p>
+    </div>
+
+    <div class="section-label">Grietas por dimensión</div>
+    <div class="dim-grid" id="dim-grid"></div>
+
+    <div class="section-label">Tus grietas más urgentes</div>
+    <div id="insights-container"></div>
+
+    <div class="closing-note">
+      Este diagnóstico es un punto de partida, no un veredicto. Las grietas se detectan para trabajarlas — no para definirte. El operador que las reconoce ya lleva ventaja sobre el que las ignora.
+    </div>
+
+    <div class="nav" style="margin-top:24px">
+      <button class="btn" onclick="restart()">← Volver a evaluar</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>Proyecto Umbral · Biblioteca del Operador Humano</p>
+</div>
+
+<script>
+const STEPS = [
+  {
+    cat: "Salud", title: "Tu cuerpo bajo presión", pause: null,
+    questions: [
+      { text: '"Llevo semanas durmiendo poco. Me despierto pensando en el negocio y ya no logro volver a dormir."', key: "s1" },
+      { text: '"Estoy siempre cansado, pero cuando me acuesto mi cabeza no deja de pensar en pendientes."', key: "s2" },
+      { text: '"Mi médico me ha dado señales de alerta. Lo primero que pienso es: no tengo tiempo para enfermarme."', key: "s3" },
+    ]
+  },
+  {
+    cat: "Familia", title: "El costo familiar", pause: null,
+    questions: [
+      { text: '"Mi pareja o familia siente que no estoy presente, aunque físicamente esté en casa."', key: "f1" },
+      { text: '"He tenido que elegir entre momentos familiares importantes y compromisos del negocio."', key: "f2" },
+      { text: '"Siento culpa real por el tiempo que no le doy a las personas que más importan."', key: "f3" },
+    ]
+  },
+  {
+    cat: "Negocio", title: "La trampa del operador central", pause: 1,
+    questions: [
+      { text: '"Mi negocio depende demasiado de mí. Si paro, todo se cae."', key: "n1" },
+      { text: '"Trabajo todo el día y aun así siento que no avanzo nada relevante."', key: "n2" },
+      { text: '"Cada decisión, grande o pequeña, termina en mi escritorio."', key: "n3" },
+    ]
+  },
+  {
+    cat: "Mente", title: "La saturación cognitiva", pause: null,
+    questions: [
+      { text: '"Mi cabeza nunca se apaga. La saturación mental es constante."', key: "m1" },
+      { text: '"Cada vez me cuesta más concentrarme y tomar decisiones claras."', key: "m2" },
+      { text: '"Antes tenía claridad. Hoy todo parece ruido y no sé por dónde empezar."', key: "m3" },
+    ]
+  },
+  {
+    cat: "Dinero", title: "La presión financiera", pause: null,
+    questions: [
+      { text: '"Hay meses donde no sé cómo cubrir todo. La incertidumbre financiera es alta."', key: "d1" },
+      { text: '"Trabajo más que nunca pero siento más presión económica, no menos."', key: "d2" },
+      { text: '"Todo depende de cerrar el siguiente contrato o venta. La fragilidad me pesa."', key: "d3" },
+    ]
+  },
+  {
+    cat: "Identidad", title: "¿Quién eres fuera de tu rol?", pause: 2,
+    questions: [
+      { text: '"Me he convertido en mi trabajo. Ya no sé bien quién soy fuera de él."', key: "i1" },
+      { text: '"Hay días que siento que estoy actuando un papel frente a todos."', key: "i2" },
+      { text: '"A veces dudo de si realmente sé lo que hago o solo he tenido suerte."', key: "i3" },
+    ]
+  },
+  {
+    cat: "Propósito y relaciones", title: "El sentido de lo que construyes", pause: null,
+    questions: [
+      { text: '"Olvidé por qué empecé esto. Lo que hago tiene cada vez menos sentido."', key: "p1" },
+      { text: '"Logré cosas importantes... pero no se siente como esperaba. Hay un vacío raro."', key: "p2" },
+      { text: '"Cada vez hablo menos con personas cercanas. Mi círculo se ha reducido mucho."', key: "p3" },
+    ]
+  },
+  {
+    cat: "Caída y reconstrucción", title: "Las cicatrices que todavía operan", pause: null,
+    questions: [
+      { text: '"He vivido una caída significativa: de negocio, estatus o reputación."', key: "c1" },
+      { text: '"Después de lo que pasó, me cuesta volver a aparecer, publicar o mostrarme."', key: "c2" },
+      { text: '"Siento que pagué un precio muy alto en lo personal por lo que construí."', key: "c3" },
+    ]
+  },
+  {
+    cat: "Confianza en ti mismo", title: "Tu criterio bajo presión", pause: 3,
+    questions: [
+      { text: '"Antes decidía rápido y con seguridad. Hoy reviso todo muchas veces antes de moverme."', key: "k1" },
+      { text: '"Después de un error grande, cada decisión se siente como caminar sobre hielo."', key: "k2" },
+    ]
+  },
+];
+
+const OPTS = [
+  { label: "No me identifica", val: 0 },
+  { label: "Algo, de vez en cuando", val: 1 },
+  { label: "Sí, con frecuencia", val: 2 },
+  { label: "Esto me define ahora mismo", val: 3 },
+];
+
+const INSIGHTS = {
+  "Salud": { title: "Tu cuerpo está mandando señales", body: "El deterioro físico del operador es silencioso pero acumulativo. Ignorar las señales del cuerpo no es fortaleza — es una grieta que se profundiza sola." },
+  "Familia": { title: "El costo familiar se acumula en silencio", body: "Las ausencias no se facturan, pero sí se cobran. La distancia emocional puede crecer sin que te des cuenta hasta que ya es difícil de cerrar." },
+  "Negocio": { title: "Eres el cuello de botella de tu propio sistema", body: "Un negocio que solo funciona contigo no es un negocio — es un empleo con más responsabilidad. Esta dependencia es una de las grietas más peligrosas." },
+  "Mente": { title: "La saturación cognitiva distorsiona tu criterio", body: "Una mente saturada no puede tomar decisiones claras. El ruido mental crónico afecta tu juicio sin que lo notes, y eso tiene consecuencias reales." },
+  "Dinero": { title: "La fragilidad financiera amplifica todo lo demás", body: "La presión económica constante consume energía mental que necesitas para operar bien. No es solo un problema de números — es un problema de capacidad." },
+  "Identidad": { title: "Te perdiste dentro de tu rol", body: "Cuando el operador se funde con su proyecto, cualquier golpe al negocio se vuelve un golpe a quién es. Eso es una fragilidad que pocos reconocen a tiempo." },
+  "Propósito y relaciones": { title: "El vacío de propósito es una señal profunda", body: "Cuando el 'por qué' desaparece, el esfuerzo pierde dirección. El aislamiento progresivo refuerza ese vacío hasta que se vuelve la norma." },
+  "Caída y reconstrucción": { title: "La caída dejó una cicatriz que todavía opera", body: "El miedo a volver a exponerse no es cobardía — es una respuesta normal. Pero si no se trabaja, se convierte en parálisis disfrazada de prudencia." },
+  "Confianza en ti mismo": { title: "Tu criterio está bajo presión constante", body: "Dudar del propio juicio después de errores grandes es humano. Pero si ese estado se instala como permanente, bloquea la capacidad de operar con claridad." },
+};
+
+const BAR_COLORS = ["#3B6D11","#534AB7","#185FA5","#854F0B","#A32D2D","#993556","#0F6E56","#3C3489","#BA7517"];
+
+let step = 0, answers = {};
+
+function hideAll() {
+  document.getElementById('quiz-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'none';
+  [1,2,3].forEach(n => document.getElementById('pause-' + n).style.display = 'none');
+}
+
+function render() {
+  hideAll();
+  document.getElementById('quiz-section').style.display = 'block';
+  const s = STEPS[step];
+  const pct = Math.round((step / STEPS.length) * 100);
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('sec-label').textContent = 'Dimensión ' + (step + 1) + ' de ' + STEPS.length + ' · ' + s.cat;
+  document.getElementById('prog-count').textContent = step + ' / ' + STEPS.length;
+  document.getElementById('dim-tag').textContent = s.cat;
+  document.getElementById('dim-title').textContent = s.title;
+  document.getElementById('btn-prev').disabled = step === 0;
+  document.getElementById('btn-next').textContent = step === STEPS.length - 1 ? 'Ver mi diagnóstico →' : 'Siguiente →';
+
+  let html = '';
+  s.questions.forEach(q => {
+    html += `<div class="question-card">
+      <div class="question-text">${q.text}</div>
+      <div class="options">`;
+    OPTS.forEach(o => {
+      const sel = answers[q.key] === o.val ? ' selected' : '';
+      html += `<label class="opt${sel}">
+        <input type="radio" name="${q.key}" value="${o.val}" onchange="pick('${q.key}',${o.val})" ${answers[q.key] === o.val ? 'checked' : ''}>
+        ${o.label}
+      </label>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('q-container').innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function pick(key, val) {
+  answers[key] = val;
+  document.querySelectorAll(`[name="${key}"]`).forEach(inp => {
+    const lbl = inp.closest('.opt');
+    if (parseInt(inp.value) === val) lbl.classList.add('selected');
+    else lbl.classList.remove('selected');
+  });
+}
+
+function stepAnswered() {
+  return STEPS[step].questions.every(q => answers[q.key] !== undefined);
+}
+
+function nextStep() {
+  if (!stepAnswered()) { alert('Por favor responde todas las preguntas antes de continuar.'); return; }
+  const s = STEPS[step];
+  if (s.pause !== null) {
+    hideAll();
+    document.getElementById('pause-' + s.pause).style.display = 'block';
+    window.scrollTo(0, 0);
+    return;
+  }
+  advanceStep();
+}
+
+function resumeFromPause() {
+  advanceStep();
+}
+
+function advanceStep() {
+  if (step < STEPS.length - 1) { step++; render(); }
+  else { showResult(); }
+}
+
+function prevStep() {
+  if (step > 0) { step--; render(); }
+}
+
+function showResult() {
+  hideAll();
+  document.getElementById('result-section').style.display = 'block';
+  const totalQ = STEPS.reduce((a, s) => a + s.questions.length, 0);
+  const raw = STEPS.reduce((a, s) => a + s.questions.reduce((b, q) => b + (answers[q.key] || 0), 0), 0);
+  const score = Math.round((raw / (totalQ * 3)) * 100);
+
+  document.getElementById('score-num').textContent = score;
+
+  let phaseClass, phaseText, phaseDesc, accent;
+  if (score < 30) {
+    phaseClass = 'phase-verde'; phaseText = 'Operador estable'; accent = '#3B6D11';
+    phaseDesc = 'Tus grietas son manejables. Hay señales tempranas que vale la pena atender antes de que se profundicen.';
+  } else if (score < 60) {
+    phaseClass = 'phase-ambar'; phaseText = 'Operador en riesgo'; accent = '#854F0B';
+    phaseDesc = 'Las grietas ya son visibles. El sistema sigue funcionando, pero el desgaste acumulado es real. Es momento de actuar.';
+  } else {
+    phaseClass = 'phase-rojo'; phaseText = 'Operador en límite crítico'; accent = '#A32D2D';
+    phaseDesc = 'Las señales son críticas en múltiples dimensiones. Reconocerlo es ya el primer movimiento real hacia la reconstrucción.';
+  }
+
+  const ring = document.getElementById('score-ring');
+  ring.style.borderColor = accent;
+  document.getElementById('score-num').style.color = accent;
+  const tag = document.getElementById('phase-tag');
+  tag.className = 'phase-tag ' + phaseClass;
+  tag.textContent = phaseText;
+  document.getElementById('phase-desc').textContent = phaseDesc;
+
+  const dimData = STEPS.map((s, i) => {
+    const max = s.questions.length * 3;
+    const val = s.questions.reduce((a, q) => a + (answers[q.key] || 0), 0);
+    return { cat: s.cat, pct: Math.round((val / max) * 100), color: BAR_COLORS[i % BAR_COLORS.length] };
+  });
+
+  document.getElementById('dim-grid').innerHTML = dimData.map(d => `
+    <div class="dim-card">
+      <div class="dim-name">${d.cat}</div>
+      <div class="dim-bar-bg"><div class="dim-bar" style="width:${d.pct}%;background:${d.color}"></div></div>
+      <div class="dim-pct">${d.pct}% de tensión</div>
+    </div>`).join('');
+
+  const top = [...dimData].sort((a, b) => b.pct - a.pct).slice(0, 3);
+  document.getElementById('insights-container').innerHTML = top.map(d => {
+    const ins = INSIGHTS[d.cat] || { title: d.cat, body: '' };
+    return `<div class="insight-box">
+      <div class="insight-title">${ins.title}</div>
+      <div class="insight-body">${ins.body}</div>
+    </div>`;
+  }).join('');
+
+  window.scrollTo(0, 0);
+}
+
+function restart() {
+  answers = {}; step = 0; render();
+}
+
+render();
+</script>
+</body>
+</html>
