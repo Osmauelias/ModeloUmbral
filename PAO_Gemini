@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PAO v2.0 | Protocolo de Autopsia Operativa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root { --red: #ff0000; --bg: #000; --text: #e0e0e0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; padding: 40px; }
+        .container { max-width: 700px; margin: auto; border: 1px solid #333; padding: 30px; }
+        h1 { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 10px; }
+        .q-block { margin-bottom: 25px; border-bottom: 1px solid #222; padding-bottom: 15px; }
+        label { display: block; margin-bottom: 10px; font-size: 0.9rem; color: #888; }
+        select, input { width: 100%; background: #111; color: #fff; border: 1px solid #333; padding: 10px; margin-bottom: 15px; }
+        button { background: #fff; color: #000; border: none; padding: 20px; width: 100%; font-weight: bold; cursor: pointer; }
+        button:hover { background: var(--red); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>[ AUTOPSIA UMBRAL v2.0 ]</h1>
+        <form id="paoForm">
+            <input type="text" id="nombre" placeholder="NOMBRE DEL OPERADOR" required>
+            <input type="email" id="email" placeholder="EMAIL DE SOBERANÍA" required>
+            <input type="text" id="whatsapp" placeholder="WHATSAPP (CÓDIGO PAÍS)">
+            
+            <div id="questions"></div>
+            <button type="submit">GENERAR SENTENCIA TÉCNICA (PDF)</button>
+        </form>
+    </div>
+
+    <script>
+        const scriptURL = 'TU_URL_DE_APPS_SCRIPT_AQUI';
+        const qData = [
+            // CHASIS (C1-C10) - Basado en Sapolsky y Maté [cite: 59, 65]
+            "¿Te despiertas cansado aunque hayas dormido 'bien'?",
+            "¿Dependes de cafeína para tomar la primera decisión?",
+            "¿Tu mandíbula o cuello están tensos al despertar?",
+            "¿Te despiertas a las 3-4 AM con la mente acelerada?",
+            "¿Sientes opresión en el pecho al ver notificaciones?",
+            "¿Tu peso ha cambiado drásticamente en el último año?",
+            "¿Tu deseo de conexión humana ha bajado por cansancio?",
+            "¿Te enfermas justo cuando decides descansar?",
+            "¿Pierdes el foco visual tras 4 horas de trabajo?",
+            "¿Te irritas por errores pequeños de tu equipo?",
+            // SISTEMA (S11-S20) - Basado en Taleb y Dalio [cite: 117, 122]
+            "¿Si apagas el celular 7 días, tu ingreso cae >50%?",
+            "¿Eres el cuello de botella de +3 procesos críticos?",
+            "¿Tu flujo de caja depende de que tú vendas?",
+            "¿Sientes que apagas incendios en lugar de construir?",
+            "¿Tienes manuales que otros sigan sin llamarte?",
+            "¿Decides basándote en el miedo a perder?",
+            "¿Tu equipo te tiene miedo en lugar de respeto?",
+            "¿Sabes exactamente cuánto te cuesta cada cliente?",
+            "¿Tu negocio se beneficia del caos del mercado?",
+            "¿Pasas el 80% de tu tiempo en tareas que odias?",
+            // IDENTIDAD (I21-I30) - Basado en Grinberg y Dispenza 
+            "¿Sientes que 'algo malo va a pasar' pese al éxito?",
+            "¿Te sientes un fraude a pesar de tus números?",
+            "¿Has olvidado por qué empezaste este negocio?",
+            "¿Tu identidad depende de cuánto facturas?",
+            "¿Te cuesta visualizar tu paz a 5 años?",
+            "¿Tu señal al mercado es coherente con tu interior?",
+            "¿Sientes que repites el mismo año una y otra vez?",
+            "¿Ignoras tu intuición por seguir la 'lógica'?",
+            "¿Te sientes solo rodeado de gente que te admira?",
+            "¿Estás listo para dejar morir a tu versión actual?"
+        ];
+
+        const qContainer = document.getElementById('questions');
+        qData.forEach((txt, i) => {
+            qContainer.innerHTML += `
+                <div class="q-block">
+                    <label>${i+1}. ${txt}</label>
+                    <select class="q-ans" required>
+                        <option value="1">Nunca / Falso</option>
+                        <option value="3">A veces / Parcial</option>
+                        <option value="5">Siempre / Cierto</option>
+                    </select>
+                </div>`;
+        });
+
+        document.getElementById('paoForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const respuestas = Array.from(document.querySelectorAll('.q-ans')).map(s => s.value);
+            const payload = {
+                nombre: document.getElementById('nombre').value,
+                email: document.getElementById('email').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                respuestas: respuestas,
+                dispositivo: navigator.userAgent
+            };
+
+            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("courier");
+            doc.text("SENTENCIA TÉCNICA: PROYECTO UMBRAL", 10, 20);
+            doc.text(`OPERADOR: ${payload.nombre}`, 10, 30);
+            doc.text(`VERDICTO: ${result.veredicto}`, 10, 40);
+            doc.text(`Chasis (Sapolsky): ${result.avgC}/5`, 10, 60);
+            doc.text(`Sistema (Taleb): ${result.avgS}/5`, 10, 70);
+            doc.text(`Identidad (Grinberg): ${result.avgI}/5`, 10, 80);
+            doc.text("PRÓXIMO PASO: PROTOCOLO C-01 INMEDIATO.", 10, 100);
+            doc.save(`Autopsia_${payload.nombre}.pdf`);
+            
+            window.location.href = "https://nas.io/umbral/forms/nunca-lo-vas-a-lograr";
+        };
+    </script>
+</body>
+</html>
