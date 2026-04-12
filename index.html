@@ -1,113 +1,593 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>PAO v2.0 | Protocolo de Autopsia Operativa</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        :root { --red: #ff0000; --bg: #000; --text: #e0e0e0; }
-        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; padding: 40px; }
-        .container { max-width: 700px; margin: auto; border: 1px solid #333; padding: 30px; }
-        h1 { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 10px; }
-        .q-block { margin-bottom: 25px; border-bottom: 1px solid #222; padding-bottom: 15px; }
-        label { display: block; margin-bottom: 10px; font-size: 0.9rem; color: #888; }
-        select, input { width: 100%; background: #111; color: #fff; border: 1px solid #333; padding: 10px; margin-bottom: 15px; }
-        button { background: #fff; color: #000; border: none; padding: 20px; width: 100%; font-weight: bold; cursor: pointer; }
-        button:hover { background: var(--red); color: #fff; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PAO — Protocolo de Autopsia Operativa · Umbral</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--umbral:#2D2A6E;--umbral-mid:#4845A0;--umbral-light:#EEEDFE;
+--bg:#080714;--bg-card:#0F0E1F;--text:#E8E7F8;--text-muted:#8886B8;
+--border:#1E1D40;--warn:#F4A261;--ok:#5CDB95;--red:#5C0A0A;
+--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.7;font-size:16px;overflow-x:hidden}
+.pb{position:fixed;top:0;left:0;right:0;height:2px;background:var(--border);z-index:100}
+.pf{height:100%;background:linear-gradient(90deg,var(--umbral-mid),var(--umbral-light));width:0%;transition:width .5s ease}
+.pl{position:fixed;top:10px;right:20px;font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:.1em;z-index:100}
+.shell{max-width:700px;margin:0 auto;padding:0 24px 120px;position:relative;z-index:1}
+.screen{display:none}.screen.active{display:block}
+
+/* INTRO */
+.intro-wrap{padding:80px 0 60px}
+.sys-tag{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--text-muted);text-transform:uppercase;margin-bottom:48px;display:flex;align-items:center;gap:10px}
+.sys-tag::before{content:'';display:inline-block;width:6px;height:6px;background:var(--umbral-light);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1.main{font-family:'DM Serif Display',serif;font-size:clamp(34px,7vw,56px);line-height:1.1;color:var(--text);margin-bottom:8px;font-weight:400}
+h1.main em{font-style:italic;color:var(--umbral-light)}
+.sub-label{font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:.08em;margin-bottom:48px;text-transform:uppercase}
+.divider{height:1px;background:var(--border);margin:36px 0}
+.body-text p{color:var(--text-muted);margin-bottom:18px;font-size:15px;line-height:1.8}
+.body-text strong{color:var(--text);font-weight:500}
+.highlight{border-left:2px solid var(--umbral-mid);padding:16px 20px;margin:28px 0;background:var(--bg-card);color:var(--text);font-size:15px;line-height:1.75}
+.warn-box{border:1px solid #3A1010;background:rgba(92,10,10,.18);padding:20px 22px;margin:28px 0}
+.warn-box p{color:#D08080;font-size:14px;line-height:1.75;margin:0}
+.warn-box strong{color:#E8A0A0}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin:36px 0}
+.meta-item{background:var(--bg-card);padding:18px 16px;text-align:center}
+.meta-val{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text);display:block}
+.meta-lbl{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+
+/* BLOQUE HEADER */
+.blk-hdr{padding:64px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.blk-num{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px}
+.blk-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);font-weight:400}
+.blk-desc{color:var(--text-muted);font-size:14px;margin-top:10px;line-height:1.7}
+
+/* QUESTION */
+.qcard{margin-bottom:28px;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.qnum{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.qtext{font-size:17px;line-height:1.6;color:var(--text);margin-bottom:18px}
+.qsub{font-size:13px;color:var(--text-muted);margin-top:-12px;margin-bottom:16px;font-style:italic}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:flex-start;gap:14px;padding:13px 16px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:border-color .15s,background .15s;font-size:14px;color:var(--text-muted);line-height:1.55}
+.opt:hover{border-color:var(--umbral-mid);background:rgba(45,42,110,.15);color:var(--text)}
+.opt.sel{border-color:var(--umbral-light);background:rgba(45,42,110,.25);color:var(--text)}
+.dot{width:14px;height:14px;border:1px solid var(--border);border-radius:50%;flex-shrink:0;margin-top:2px;transition:all .15s}
+.opt.sel .dot{border-color:var(--umbral-light);background:var(--umbral-light)}
+
+/* PAUSA */
+.pausa{border:1px solid var(--umbral-mid);background:rgba(45,42,110,.1);padding:32px 28px;margin:48px 0;position:relative}
+.pausa::before{content:'// PAUSA';font-family:var(--mono);font-size:10px;color:var(--umbral-light);letter-spacing:.15em;position:absolute;top:0;left:24px;background:var(--bg);padding:0 8px;transform:translateY(-50%)}
+.pausa p{color:var(--text-muted);font-size:15px;line-height:1.8;margin-bottom:14px}
+.pausa strong{color:var(--text)}
+
+/* BUTTONS */
+.btn{display:inline-block;padding:14px 28px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;letter-spacing:.03em;cursor:pointer;border:none;transition:opacity .2s;text-decoration:none;text-align:center}
+.btn:hover{opacity:.85}
+.btn-p{background:var(--umbral-light);color:var(--umbral);width:100%}
+.btn-g{background:transparent;color:var(--text-muted);border:1px solid var(--border);width:100%;margin-top:10px}
+
+/* EMAIL */
+.email-wrap{padding:80px 0 40px}
+.email-wrap h2{font-family:'DM Serif Display',serif;font-size:clamp(26px,5vw,36px);font-weight:400;margin-bottom:12px}
+.email-wrap .sub{color:var(--text-muted);margin-bottom:36px;font-size:15px;line-height:1.7}
+.field-g{margin-bottom:16px}
+.field-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;display:block}
+.field-in{width:100%;background:var(--bg-card);border:1px solid var(--border);padding:13px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s}
+.field-in:focus{border-color:var(--umbral-mid)}
+.field-err{color:var(--warn);font-size:12px;margin-top:6px;display:none}
+
+/* RESULT */
+.result-wrap{padding:80px 0 40px}
+.result-wrap h1{font-family:'DM Serif Display',serif;font-size:clamp(26px,5vw,38px);font-weight:400;margin-bottom:10px}
+.r-intro{color:var(--text-muted);margin-bottom:36px;font-size:15px;line-height:1.8}
+.score-box{border:1px solid var(--border);background:var(--bg-card);padding:22px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+.score-lbl{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase}
+.score-val{font-family:'DM Serif Display',serif;font-size:42px;color:var(--text)}
+.profile-tag{font-family:var(--mono);font-size:11px;padding:5px 12px;border:1px solid;letter-spacing:.08em}
+.dim-grid{display:grid;gap:14px;margin-bottom:32px}
+.dim-card{background:var(--bg-card);border:1px solid var(--border);padding:22px 24px}
+.dim-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.dim-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text-muted);text-transform:uppercase}
+.dim-sc{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text)}
+.dim-bw{height:3px;background:var(--border);margin-bottom:12px}
+.dim-b{height:100%;background:var(--umbral-light);transition:width 1s ease}
+.dim-b.crit{background:#8C3030}.dim-b.warn{background:var(--warn)}.dim-b.ok{background:var(--ok)}
+.dim-desc{font-size:13px;color:var(--text-muted);line-height:1.65}
+.gri-sec{margin:32px 0}
+.gri-sec h2{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:14px}
+.gri-card{border-left:2px solid var(--warn);padding:15px 18px;background:var(--bg-card);margin-bottom:10px}
+.gri-title{font-weight:600;font-size:14px;color:var(--text);margin-bottom:5px}
+.gri-desc{font-size:13px;color:var(--text-muted);line-height:1.65}
+.cta-block{border-top:1px solid var(--border);padding-top:32px;margin-top:36px;text-align:center}
+.cta-block p{color:var(--text-muted);font-size:14px;margin-bottom:18px;line-height:1.7}
+.nav-warn{font-size:12px;color:var(--warn);text-align:center;margin-top:10px;display:none}
+.status{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;z-index:50;font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:.05em}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>[ AUTOPSIA UMBRAL v2.0 ]</h1>
-        <form id="paoForm">
-            <input type="text" id="nombre" placeholder="NOMBRE DEL OPERADOR" required>
-            <input type="email" id="email" placeholder="EMAIL DE SOBERANÍA" required>
-            <input type="text" id="whatsapp" placeholder="WHATSAPP (CÓDIGO PAÍS)">
-            
-            <div id="questions"></div>
-            <button type="submit">GENERAR SENTENCIA TÉCNICA (PDF)</button>
-        </form>
-    </div>
 
-    <script>
-        const scriptURL = 'TU_URL_DE_APPS_SCRIPT_AQUI';
-        const qData = [
-            // CHASIS (C1-C10) - Basado en Sapolsky y Maté [cite: 59, 65]
-            "¿Te despiertas cansado aunque hayas dormido 'bien'?",
-            "¿Dependes de cafeína para tomar la primera decisión?",
-            "¿Tu mandíbula o cuello están tensos al despertar?",
-            "¿Te despiertas a las 3-4 AM con la mente acelerada?",
-            "¿Sientes opresión en el pecho al ver notificaciones?",
-            "¿Tu peso ha cambiado drásticamente en el último año?",
-            "¿Tu deseo de conexión humana ha bajado por cansancio?",
-            "¿Te enfermas justo cuando decides descansar?",
-            "¿Pierdes el foco visual tras 4 horas de trabajo?",
-            "¿Te irritas por errores pequeños de tu equipo?",
-            // SISTEMA (S11-S20) - Basado en Taleb y Dalio [cite: 117, 122]
-            "¿Si apagas el celular 7 días, tu ingreso cae >50%?",
-            "¿Eres el cuello de botella de +3 procesos críticos?",
-            "¿Tu flujo de caja depende de que tú vendas?",
-            "¿Sientes que apagas incendios en lugar de construir?",
-            "¿Tienes manuales que otros sigan sin llamarte?",
-            "¿Decides basándote en el miedo a perder?",
-            "¿Tu equipo te tiene miedo en lugar de respeto?",
-            "¿Sabes exactamente cuánto te cuesta cada cliente?",
-            "¿Tu negocio se beneficia del caos del mercado?",
-            "¿Pasas el 80% de tu tiempo en tareas que odias?",
-            // IDENTIDAD (I21-I30) - Basado en Grinberg y Dispenza 
-            "¿Sientes que 'algo malo va a pasar' pese al éxito?",
-            "¿Te sientes un fraude a pesar de tus números?",
-            "¿Has olvidado por qué empezaste este negocio?",
-            "¿Tu identidad depende de cuánto facturas?",
-            "¿Te cuesta visualizar tu paz a 5 años?",
-            "¿Tu señal al mercado es coherente con tu interior?",
-            "¿Sientes que repites el mismo año una y otra vez?",
-            "¿Ignoras tu intuición por seguir la 'lógica'?",
-            "¿Te sientes solo rodeado de gente que te admira?",
-            "¿Estás listo para dejar morir a tu versión actual?"
-        ];
+<div class="pb"><div class="pf" id="pf"></div></div>
+<div class="pl" id="pl">PAO · Umbral</div>
 
-        const qContainer = document.getElementById('questions');
-        qData.forEach((txt, i) => {
-            qContainer.innerHTML += `
-                <div class="q-block">
-                    <label>${i+1}. ${txt}</label>
-                    <select class="q-ans" required>
-                        <option value="1">Nunca / Falso</option>
-                        <option value="3">A veces / Parcial</option>
-                        <option value="5">Siempre / Cierto</option>
-                    </select>
-                </div>`;
-        });
+<div class="shell">
 
-        document.getElementById('paoForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const respuestas = Array.from(document.querySelectorAll('.q-ans')).map(s => s.value);
-            const payload = {
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
-                whatsapp: document.getElementById('whatsapp').value,
-                respuestas: respuestas,
-                dispositivo: navigator.userAgent
-            };
+<!-- INTRO -->
+<div class="screen active" id="s-intro">
+<div class="intro-wrap">
+  <div class="sys-tag">Umbral · Sistema de Reconstrucción del Operador Humano</div>
+  <h1 class="main">Protocolo de<br><em>Autopsia Operativa</em></h1>
+  <div class="sub-label">PAO · V1.0 · Diagnóstico de Microfracturas Sistémicas</div>
+  <div class="divider"></div>
+  <div class="body-text">
+    <p>Si estás aquí es porque algo en ti ya lo sabe. No necesariamente lo que es — pero sí que <strong>algo no está funcionando como debería</strong>. El cuerpo lo registra antes de que la mente lo nombre. Las decisiones lo evidencian antes de que lo admitas.</p>
+    <p>Este no es un cuestionario de personalidad. No te va a decir que eres "visionario" ni que tu estilo de liderazgo es "transformacional". <strong>No estamos aquí para hacerte sentir bien.</strong></p>
+    <div class="highlight">El PAO es un escáner de hardware. Lo que hace un médico cuando te pide que le digas exactamente dónde duele, con qué frecuencia, qué lo provoca y qué lo alivia. No el dolor que quisieras tener ni el que te parece más aceptable — el que tienes.</div>
+    <p>Trabajamos en tres dimensiones. <strong>C — Cuerpo:</strong> tu biología, el cortisol, el sueño, la química que gobierna cada decisión que crees que tomas con claridad. <strong>S — Sistema:</strong> tu arquitectura operativa cuando no estás en tu mejor versión. <strong>I — Identidad:</strong> quién está realmente tomando las decisiones — el Operador consciente o el Fantasma que aprendió a parecer tú.</p>
+    <div class="warn-box"><p><strong>Una advertencia que merece tu atención:</strong> Este protocolo solo funciona si respondes lo que es verdad. No lo que suena mejor, no lo que le dirías a un socio o a tu familia. Le estarías mintiendo al único médico que puede ver tu caso completo: tú mismo. Si encuentras resistencia a responder con honestidad — eso ya es información diagnóstica. No la ignores.</p></div>
+    <p>Al terminar, recibirás tu <strong>Reporte de Riesgo Sistémico</strong>: un mapa visual de tus tres dimensiones, las dos grietas más urgentes y el primer protocolo de estabilización. No es teoría. Es el punto de partida real.</p>
+  </div>
+  <div class="meta-grid">
+    <div class="meta-item"><span class="meta-val">28</span><span class="meta-lbl">Preguntas</span></div>
+    <div class="meta-item"><span class="meta-val">3</span><span class="meta-lbl">Dimensiones</span></div>
+    <div class="meta-item"><span class="meta-val">12–15</span><span class="meta-lbl">Minutos</span></div>
+  </div>
+  <button class="btn btn-p" onclick="startPAO()">Iniciar el protocolo →</button>
+</div>
+</div>
 
-            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
-            const result = await response.json();
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFont("courier");
-            doc.text("SENTENCIA TÉCNICA: PROYECTO UMBRAL", 10, 20);
-            doc.text(`OPERADOR: ${payload.nombre}`, 10, 30);
-            doc.text(`VERDICTO: ${result.veredicto}`, 10, 40);
-            doc.text(`Chasis (Sapolsky): ${result.avgC}/5`, 10, 60);
-            doc.text(`Sistema (Taleb): ${result.avgS}/5`, 10, 70);
-            doc.text(`Identidad (Grinberg): ${result.avgI}/5`, 10, 80);
-            doc.text("PRÓXIMO PASO: PROTOCOLO C-01 INMEDIATO.", 10, 100);
-            doc.save(`Autopsia_${payload.nombre}.pdf`);
-            
-            window.location.href = "https://nas.io/umbral/forms/nunca-lo-vas-a-lograr";
-        };
-    </script>
+<!-- QUIZ -->
+<div class="screen" id="s-quiz">
+
+  <!-- BLOQUE C -->
+  <div class="blk-hdr"><div class="blk-num">Dimensión C · 01/03</div><div class="blk-title">Cuerpo — El Hardware</div><div class="blk-desc">Lo que tu biología registra aunque tú decidas no escucharlo. Responde lo que es, no lo que quisieras que fuera.</div></div>
+
+  <div class="qcard" id="q1"><div class="qnum">01 / 28 · C</div><div class="qtext">Cuando te despiertas, ¿cuál es la sensación física en los primeros 30 segundos?</div><div class="opts">
+    <div class="opt" onclick="pick(1,4,this)"><span class="dot"></span>Descanso real. El cuerpo está listo.</div>
+    <div class="opt" onclick="pick(1,3,this)"><span class="dot"></span>Funcional, aunque no del todo descansado.</div>
+    <div class="opt" onclick="pick(1,2,this)"><span class="dot"></span>Pesadez. Como si el sueño no hubiera ocurrido.</div>
+    <div class="opt" onclick="pick(1,1,this)"><span class="dot"></span>Agotamiento antes de empezar. A veces con dolor físico o tensión.</div>
+  </div></div>
+
+  <div class="qcard" id="q2" style="display:none"><div class="qnum">02 / 28 · C</div><div class="qtext">¿Con qué frecuencia tienes dolores — cabeza, cuello, espalda, estómago — que ya normalizaste y casi no mencionas?</div><div class="qsub">No el dolor que reportas. El que ya dejaste de reportar.</div><div class="opts">
+    <div class="opt" onclick="pick(2,4,this)"><span class="dot"></span>Rara vez o nunca.</div>
+    <div class="opt" onclick="pick(2,3,this)"><span class="dot"></span>Ocasionalmente. No me preocupa.</div>
+    <div class="opt" onclick="pick(2,2,this)"><span class="dot"></span>Frecuente. Ya es parte del paisaje.</div>
+    <div class="opt" onclick="pick(2,1,this)"><span class="dot"></span>Constante. Mi cuerpo lleva meses enviando señales que ignoro.</div>
+  </div></div>
+
+  <div class="qcard" id="q3" style="display:none"><div class="qnum">03 / 28 · C</div><div class="qtext">¿Qué necesitas para arrancar el día?</div><div class="opts">
+    <div class="opt" onclick="pick(3,4,this)"><span class="dot"></span>Nada especial. El sistema arranca solo.</div>
+    <div class="opt" onclick="pick(3,3,this)"><span class="dot"></span>Café o algún estímulo, pero es un hábito, no una dependencia.</div>
+    <div class="opt" onclick="pick(3,2,this)"><span class="dot"></span>Sin cafeína u otro estimulante no arranco. No es negociable.</div>
+    <div class="opt" onclick="pick(3,1,this)"><span class="dot"></span>Necesito varios estimulantes y aún así el inicio es difícil.</div>
+  </div></div>
+
+  <div class="qcard" id="q4" style="display:none"><div class="qnum">04 / 28 · C</div><div class="qtext">Cuando algo te presiona fuerte, ¿qué hace tu cuerpo primero?</div><div class="opts">
+    <div class="opt" onclick="pick(4,4,this)"><span class="dot"></span>Proceso la presión sin síntoma físico notable.</div>
+    <div class="opt" onclick="pick(4,3,this)"><span class="dot"></span>Tensión muscular o incomodidad pasajera.</div>
+    <div class="opt" onclick="pick(4,2,this)"><span class="dot"></span>Reacción física clara: mandíbula, pecho, insomnio.</div>
+    <div class="opt" onclick="pick(4,1,this)"><span class="dot"></span>Me desconecto. No siento nada — y eso en sí mismo es la señal.</div>
+  </div></div>
+
+  <div class="qcard" id="q5" style="display:none"><div class="qnum">05 / 28 · C</div><div class="qtext">¿Cuántas veces en la última semana comiste sentado, tranquilo, sin pantallas ni pendientes encima?</div><div class="opts">
+    <div class="opt" onclick="pick(5,4,this)"><span class="dot"></span>La mayoría de las veces.</div>
+    <div class="opt" onclick="pick(5,3,this)"><span class="dot"></span>Algunas veces.</div>
+    <div class="opt" onclick="pick(5,2,this)"><span class="dot"></span>Una o ninguna.</div>
+    <div class="opt" onclick="pick(5,1,this)"><span class="dot"></span>No recuerdo cuándo fue la última vez.</div>
+  </div></div>
+
+  <div class="qcard" id="q6" style="display:none"><div class="qnum">06 / 28 · C</div><div class="qtext">¿Cómo describes tu relación con el descanso real — no el sueño, el descanso?</div><div class="opts">
+    <div class="opt" onclick="pick(6,4,this)"><span class="dot"></span>Descanso sin culpa. Es parte del sistema.</div>
+    <div class="opt" onclick="pick(6,3,this)"><span class="dot"></span>Descanso, pero con incomodidad. Siento que debería estar haciendo algo.</div>
+    <div class="opt" onclick="pick(6,2,this)"><span class="dot"></span>El descanso me genera ansiedad. La calma se siente como amenaza.</div>
+    <div class="opt" onclick="pick(6,1,this)"><span class="dot"></span>No sé cuándo fue la última vez que descansé de verdad.</div>
+  </div></div>
+
+  <div class="qcard" id="q7" style="display:none"><div class="qnum">07 / 28 · C</div><div class="qtext">¿Usas algo — alcohol, scroll, trabajo excesivo, series — para apagar el sistema en la noche?</div><div class="qsub">Sin juicio. Solo observa qué es verdad.</div><div class="opts">
+    <div class="opt" onclick="pick(7,4,this)"><span class="dot"></span>No. El sistema se apaga solo.</div>
+    <div class="opt" onclick="pick(7,3,this)"><span class="dot"></span>A veces, pero no es un requisito.</div>
+    <div class="opt" onclick="pick(7,2,this)"><span class="dot"></span>Casi siempre necesito algo para desconectarme.</div>
+    <div class="opt" onclick="pick(7,1,this)"><span class="dot"></span>Sin ese algo no logro apagar. Ya ni lo cuestiono.</div>
+  </div></div>
+
+  <!-- PAUSA 1 -->
+  <div class="pausa" id="p1" style="display:none">
+    <p>Lo que acabas de describir no es debilidad ni falta de disciplina. <strong>Es la factura acumulada de un sistema que opera por encima de su capacidad real.</strong></p>
+    <p>El cuerpo no miente. Puede callarse durante meses, pero lleva la cuenta con precisión. Van der Kolk pasó décadas documentando lo que Sapolsky confirmó desde la biología: el estrés crónico no es un estado mental — es un cambio físico en el hardware.</p>
+    <p>Respira. Continúa.</p>
+    <button class="btn btn-g" onclick="nextBlk('S')" style="margin-top:8px;">Continuar →</button>
+  </div>
+
+  <!-- BLOQUE S -->
+  <div class="blk-hdr" id="hdr-S" style="display:none"><div class="blk-num">Dimensión S · 02/03</div><div class="blk-title">Sistema — El Software</div><div class="blk-desc">Cómo funciona tu arquitectura operativa cuando no estás en tu mejor versión. No lo que planeas — lo que realmente ocurre.</div></div>
+
+  <div class="qcard" id="q8" style="display:none"><div class="qnum">08 / 28 · S</div><div class="qtext">Si hoy pararas dos semanas sin avisar, ¿qué pasaría con tu negocio o proyecto?</div><div class="opts">
+    <div class="opt" onclick="pick(8,4,this)"><span class="dot"></span>Funcionaría bien. Hay sistemas que lo sostienen sin mí.</div>
+    <div class="opt" onclick="pick(8,3,this)"><span class="dot"></span>Sobreviviría, con complicaciones visibles.</div>
+    <div class="opt" onclick="pick(8,2,this)"><span class="dot"></span>Se complicaría seriamente. Depende de mí para la mayoría.</div>
+    <div class="opt" onclick="pick(8,1,this)"><span class="dot"></span>Se caería. Yo soy el sistema. No hay nada detrás de mí.</div>
+  </div></div>
+
+  <div class="qcard" id="q9" style="display:none"><div class="qnum">09 / 28 · S</div><div class="qtext">¿Con qué frecuencia tomas decisiones importantes desde el cansancio o la urgencia?</div><div class="opts">
+    <div class="opt" onclick="pick(9,4,this)"><span class="dot"></span>Casi nunca. Tengo protocolos para esperar.</div>
+    <div class="opt" onclick="pick(9,3,this)"><span class="dot"></span>A veces. Lo noto después.</div>
+    <div class="opt" onclick="pick(9,2,this)"><span class="dot"></span>Seguido. La urgencia le gana a la claridad.</div>
+    <div class="opt" onclick="pick(9,1,this)"><span class="dot"></span>Es mi estado normal para decidir. No recuerdo decidir desde la calma.</div>
+  </div></div>
+
+  <div class="qcard" id="q10" style="display:none"><div class="qnum">10 / 28 · S</div><div class="qtext">¿Cuántas veces has repetido: facturar bien → perder lo acumulado → volver desde cero?</div><div class="opts">
+    <div class="opt" onclick="pick(10,4,this)"><span class="dot"></span>No lo he vivido. Mi trayectoria ha sido estable.</div>
+    <div class="opt" onclick="pick(10,3,this)"><span class="dot"></span>Una vez. Lo atribuí a factores externos.</div>
+    <div class="opt" onclick="pick(10,2,this)"><span class="dot"></span>Dos o tres veces. Empiezo a ver el patrón.</div>
+    <div class="opt" onclick="pick(10,1,this)"><span class="dot"></span>Más de tres. Ya sé que el problema no es el mercado.</div>
+  </div></div>
+
+  <div class="qcard" id="q11" style="display:none"><div class="qnum">11 / 28 · S</div><div class="qtext">¿Qué tan seguido sientes que trabajas mucho y avanzas poco — como correr en una banda sin moverte?</div><div class="opts">
+    <div class="opt" onclick="pick(11,4,this)"><span class="dot"></span>Casi nunca. Mi esfuerzo se traduce en avance visible.</div>
+    <div class="opt" onclick="pick(11,3,this)"><span class="dot"></span>Algunas semanas. Lo compenso.</div>
+    <div class="opt" onclick="pick(11,2,this)"><span class="dot"></span>La mayoría del tiempo. La actividad no produce resultado.</div>
+    <div class="opt" onclick="pick(11,1,this)"><span class="dot"></span>Es como vivo. El movimiento constante es mi forma de no ver el fondo.</div>
+  </div></div>
+
+  <div class="qcard" id="q12" style="display:none"><div class="qnum">12 / 28 · S</div><div class="qtext">Cuando algo personal se complica, ¿qué haces primero?</div><div class="opts">
+    <div class="opt" onclick="pick(12,4,this)"><span class="dot"></span>Lo atiendo directamente.</div>
+    <div class="opt" onclick="pick(12,3,this)"><span class="dot"></span>Lo proceso internamente y sigo.</div>
+    <div class="opt" onclick="pick(12,2,this)"><span class="dot"></span>Me meto más al trabajo para no pensar.</div>
+    <div class="opt" onclick="pick(12,1,this)"><span class="dot"></span>Lo pospongo. Siempre hay algo más urgente.</div>
+  </div></div>
+
+  <div class="qcard" id="q13" style="display:none"><div class="qnum">13 / 28 · S</div><div class="qtext">¿Hay conversaciones que debes tener y llevas semanas o meses evitando?</div><div class="opts">
+    <div class="opt" onclick="pick(13,4,this)"><span class="dot"></span>No. Tengo las conversaciones difíciles cuando son necesarias.</div>
+    <div class="opt" onclick="pick(13,3,this)"><span class="dot"></span>Una, que eventualmente tendré.</div>
+    <div class="opt" onclick="pick(13,2,this)"><span class="dot"></span>Sí, más de una. El costo de tenerlas me parece mayor.</div>
+    <div class="opt" onclick="pick(13,1,this)"><span class="dot"></span>Varias. Evitar es mi estrategia principal para mantener la paz.</div>
+  </div></div>
+
+  <div class="qcard" id="q14" style="display:none"><div class="qnum">14 / 28 · S</div><div class="qtext">Si tu proyecto desapareciera mañana, ¿cuál sería tu miedo más inmediato?</div><div class="opts">
+    <div class="opt" onclick="pick(14,4,this)"><span class="dot"></span>Perder los ingresos. El resto lo reconstruyo.</div>
+    <div class="opt" onclick="pick(14,3,this)"><span class="dot"></span>No saber qué hacer sin esa estructura diaria.</div>
+    <div class="opt" onclick="pick(14,2,this)"><span class="dot"></span>Que la gente vea que falló. El juicio externo.</div>
+    <div class="opt" onclick="pick(14,1,this)"><span class="dot"></span>Perder la identidad. Sin ese proyecto, no sé quién soy.</div>
+  </div></div>
+
+  <div class="qcard" id="q15" style="display:none"><div class="qnum">15 / 28 · S</div><div class="qtext">¿Cuándo fue la última vez que tomaste una decisión importante desde la calma — sin urgencia, sin que alguien esperara respuesta?</div><div class="opts">
+    <div class="opt" onclick="pick(15,4,this)"><span class="dot"></span>Reciente. Tengo protocolos para crear ese espacio.</div>
+    <div class="opt" onclick="pick(15,3,this)"><span class="dot"></span>Hace algunos meses.</div>
+    <div class="opt" onclick="pick(15,2,this)"><span class="dot"></span>Hace tiempo. No recuerdo bien.</div>
+    <div class="opt" onclick="pick(15,1,this)"><span class="dot"></span>No recuerdo. La urgencia es el contexto permanente.</div>
+  </div></div>
+
+  <!-- PAUSA 2 -->
+  <div class="pausa" id="p2" style="display:none">
+    <p>Detente un momento.</p>
+    <p>Lo que acabas de describir no es un problema de estrategia ni de disciplina. <strong>Es un problema de diseño.</strong> Dalio lo llama diagnóstico de causa raíz: si el mismo resultado negativo se repite con diferentes variables, el error no está en las variables — está en el sistema que las procesa.</p>
+    <p>Kahneman lo documentó: la mayoría de las decisiones de negocios que creemos estratégicas son respuestas del Sistema 1 — rápidas, emocionales, sesgadas por el estado biológico del momento. <strong>No te estoy diciendo que fallaste. Te estoy mostrando dónde está el código roto.</strong></p>
+    <button class="btn btn-g" onclick="nextBlk('I')" style="margin-top:8px;">Continuar →</button>
+  </div>
+
+  <!-- BLOQUE I -->
+  <div class="blk-hdr" id="hdr-I" style="display:none"><div class="blk-num">Dimensión I · 03/03</div><div class="blk-title">Identidad — La Señal</div><div class="blk-desc">Quién está operando tu vida real. El Operador consciente o el Fantasma que aprendió a parecer tú.</div></div>
+
+  <div class="qcard" id="q16" style="display:none"><div class="qnum">16 / 28 · I</div><div class="qtext">¿Hay una versión de ti — más descansada, más presente, más real — que sientes que dejaste de ser sin haberlo decidido?</div><div class="opts">
+    <div class="opt" onclick="pick(16,4,this)"><span class="dot"></span>No. Soy esencialmente la misma persona que siempre he sido.</div>
+    <div class="opt" onclick="pick(16,3,this)"><span class="dot"></span>Quizás. Algo cambió pero no lo tengo claro.</div>
+    <div class="opt" onclick="pick(16,2,this)"><span class="dot"></span>Sí. Hay una versión anterior que extraño y no sé cómo recuperar.</div>
+    <div class="opt" onclick="pick(16,1,this)"><span class="dot"></span>Sí, y ya casi no recuerdo cómo era esa versión. Llevo demasiado tiempo siendo la máscara.</div>
+  </div></div>
+
+  <div class="qcard" id="q17" style="display:none"><div class="qnum">17 / 28 · I</div><div class="qtext">Si alguien que te conoce de verdad — no alguien que te admira — te preguntara hoy cómo estás, ¿cuál sería la respuesta que no darías en voz alta?</div><div class="opts">
+    <div class="opt" onclick="pick(17,4,this)"><span class="dot"></span>Bien de verdad. No hay versión oculta.</div>
+    <div class="opt" onclick="pick(17,3,this)"><span class="dot"></span>Cansado, pero funcional. No es para tanto.</div>
+    <div class="opt" onclick="pick(17,2,this)"><span class="dot"></span>Sosteniendo más de lo que muestro. Mucho más.</div>
+    <div class="opt" onclick="pick(17,1,this)"><span class="dot"></span>No sé. Hace tanto tiempo que no me pregunto eso honestamente.</div>
+  </div></div>
+
+  <div class="qcard" id="q18" style="display:none"><div class="qnum">18 / 28 · I</div><div class="qtext">¿Cuánto de lo que haces hoy tiene sentido para ti más allá de la necesidad económica?</div><div class="opts">
+    <div class="opt" onclick="pick(18,4,this)"><span class="dot"></span>La mayor parte. Hay propósito claro detrás.</div>
+    <div class="opt" onclick="pick(18,3,this)"><span class="dot"></span>Algo sí, mucho es inercia. Sigo porque empecé.</div>
+    <div class="opt" onclick="pick(18,2,this)"><span class="dot"></span>Poco. El dinero es el único argumento.</div>
+    <div class="opt" onclick="pick(18,1,this)"><span class="dot"></span>Honestamente no sé cuánto de esto elegí y cuánto simplemente pasó.</div>
+  </div></div>
+
+  <div class="qcard" id="q19" style="display:none"><div class="qnum">19 / 28 · I</div><div class="qtext">¿Hay alguien en tu vida que haya dicho en los últimos seis meses que estás distante, diferente o ausente?</div><div class="opts">
+    <div class="opt" onclick="pick(19,4,this)"><span class="dot"></span>No. Mi presencia es consistente.</div>
+    <div class="opt" onclick="pick(19,3,this)"><span class="dot"></span>Lo han insinuado pero lo entiendo como parte de la etapa.</div>
+    <div class="opt" onclick="pick(19,2,this)"><span class="dot"></span>Sí, más de una vez. Lo sé y no sé cómo cambiar sin que algo se caiga.</div>
+    <div class="opt" onclick="pick(19,1,this)"><span class="dot"></span>Ya dejaron de decirlo. Aprendieron que no cambia nada.</div>
+  </div></div>
+
+  <div class="qcard" id="q20" style="display:none"><div class="qnum">20 / 28 · I</div><div class="qtext">¿Cuándo fue la última vez que hiciste algo sin calcular si te hacía ver más exitoso o más congruente con tu imagen?</div><div class="opts">
+    <div class="opt" onclick="pick(20,4,this)"><span class="dot"></span>Frecuente. No todo lo que hago es para la tribuna.</div>
+    <div class="opt" onclick="pick(20,3,this)"><span class="dot"></span>A veces. Hay espacios donde soy yo sin audiencia.</div>
+    <div class="opt" onclick="pick(20,2,this)"><span class="dot"></span>Rara vez. El filtro de imagen opera casi todo el tiempo.</div>
+    <div class="opt" onclick="pick(20,1,this)"><span class="dot"></span>No recuerdo. La versión pública y la privada ya son la misma.</div>
+  </div></div>
+
+  <div class="qcard" id="q21" style="display:none"><div class="qnum">21 / 28 · I</div><div class="qtext">¿Necesitas que el entorno te valide para sentirte funcional? No como autoestima — como el combustible real que usa tu sistema.</div><div class="opts">
+    <div class="opt" onclick="pick(21,4,this)"><span class="dot"></span>No. Opero desde convicción interna.</div>
+    <div class="opt" onclick="pick(21,3,this)"><span class="dot"></span>La validación suma, pero no es el motor.</div>
+    <div class="opt" onclick="pick(21,2,this)"><span class="dot"></span>Más de lo que me gusta admitir. El silencio externo me desestabiliza.</div>
+    <div class="opt" onclick="pick(21,1,this)"><span class="dot"></span>Es el combustible principal. Sin reconocimiento, el sistema pierde energía rápido.</div>
+  </div></div>
+
+  <div class="qcard" id="q22" style="display:none"><div class="qnum">22 / 28 · I</div><div class="qtext">Si tu sistema sigue exactamente como está — mismo ritmo, mismo desgaste — ¿qué pasa en los próximos 12 meses?</div><div class="qsub">No la respuesta optimista. La que sabes que es verdad.</div><div class="opts">
+    <div class="opt" onclick="pick(22,4,this)"><span class="dot"></span>Mejora. Voy en dirección correcta.</div>
+    <div class="opt" onclick="pick(22,3,this)"><span class="dot"></span>Se mantiene igual. No mejora ni colapsa.</div>
+    <div class="opt" onclick="pick(22,2,this)"><span class="dot"></span>Algo va a tener que ceder. Lo siento.</div>
+    <div class="opt" onclick="pick(22,1,this)"><span class="dot"></span>Algo se rompe. Ya lo siento venir. Solo no sé cuándo.</div>
+  </div></div>
+
+  <!-- BLOQUE NÚCLEO -->
+  <div class="blk-hdr" id="hdr-deep" style="display:none"><div class="blk-num">Núcleo · Lectura Final</div><div class="blk-title">Lo que nadie te pregunta</div><div class="blk-desc">Estas preguntas no tienen respuesta correcta. Solo tienen respuesta honesta o deshonesta. Ya sabes cuál necesitas dar.</div></div>
+
+  <div class="qcard" id="q23" style="display:none"><div class="qnum">23 / 28 · Núcleo</div><div class="qtext">¿Hay algo que construiste que en el fondo sabes que está sostenido más por tu presión constante que por sus propios cimientos?</div><div class="opts">
+    <div class="opt" onclick="pick(23,4,this)"><span class="dot"></span>No. Lo que construí tiene estructura real.</div>
+    <div class="opt" onclick="pick(23,3,this)"><span class="dot"></span>Hay áreas que dependen más de mí de lo que debería.</div>
+    <div class="opt" onclick="pick(23,2,this)"><span class="dot"></span>Sí. Si paro, algo importante se cae.</div>
+    <div class="opt" onclick="pick(23,1,this)"><span class="dot"></span>Sí, y eso me aterra lo suficiente como para no parar nunca.</div>
+  </div></div>
+
+  <div class="qcard" id="q24" style="display:none"><div class="qnum">24 / 28 · Núcleo</div><div class="qtext">¿Tienes personas que te digan la verdad cuando no quieres escucharla — no que te aplaudan, sino que te den información incómoda?</div><div class="opts">
+    <div class="opt" onclick="pick(24,4,this)"><span class="dot"></span>Sí. Tengo uno o dos que operan así.</div>
+    <div class="opt" onclick="pick(24,3,this)"><span class="dot"></span>Tal vez uno. No estoy seguro si es suficiente.</div>
+    <div class="opt" onclick="pick(24,2,this)"><span class="dot"></span>No realmente. Mi círculo tiende a validarme más que a cuestionarme.</div>
+    <div class="opt" onclick="pick(24,1,this)"><span class="dot"></span>No. Estoy rodeado de personas que necesitan que yo esté bien para ellos estarlo.</div>
+  </div></div>
+
+  <div class="qcard" id="q25" style="display:none"><div class="qnum">25 / 28 · Núcleo</div><div class="qtext">¿Cuánto tiempo llevas sintiendo que trabajas más de lo que recibes — en dinero, en reconocimiento, o en paz?</div><div class="opts">
+    <div class="opt" onclick="pick(25,4,this)"><span class="dot"></span>No lo siento. El intercambio es justo.</div>
+    <div class="opt" onclick="pick(25,3,this)"><span class="dot"></span>Algunos meses. Es temporal.</div>
+    <div class="opt" onclick="pick(25,2,this)"><span class="dot"></span>Más de un año. Ya normalizé el desequilibrio.</div>
+    <div class="opt" onclick="pick(25,1,this)"><span class="dot"></span>No recuerdo cuando el intercambio fue justo.</div>
+  </div></div>
+
+  <div class="qcard" id="q26" style="display:none"><div class="qnum">26 / 28 · Núcleo</div><div class="qtext">¿Hubo un momento en que consideraste — aunque fuera brevemente — que estarías mejor apagado?</div><div class="qsub">Esta pregunta existe porque muchos operadores la necesitan y nadie se las hace. Si estás en ese punto ahora mismo, lo primero no es este protocolo — es una persona real: un médico, un terapeuta, alguien de confianza. Esto puede esperar. Tú no puedes.</div><div class="opts">
+    <div class="opt" onclick="pick(26,4,this)"><span class="dot"></span>No. Nunca he llegado a ese punto.</div>
+    <div class="opt" onclick="pick(26,3,this)"><span class="dot"></span>En el pasado, brevemente. Ya no es el caso.</div>
+    <div class="opt" onclick="pick(26,2,this)"><span class="dot"></span>En el pasado con más frecuencia de lo que me gustaría admitir.</div>
+    <div class="opt" onclick="pick(26,1,this)"><span class="dot"></span>Sí, y a veces el pensamiento sigue apareciendo.</div>
+  </div></div>
+
+  <div class="qcard" id="q27" style="display:none"><div class="qnum">27 / 28 · Núcleo</div><div class="qtext">¿Hay algo que sabes con certeza que necesitas cambiar y llevas meses sin cambiar?</div><div class="opts">
+    <div class="opt" onclick="pick(27,4,this)"><span class="dot"></span>No. Cuando lo veo, lo cambio.</div>
+    <div class="opt" onclick="pick(27,3,this)"><span class="dot"></span>Algo, pero tengo un plan concreto.</div>
+    <div class="opt" onclick="pick(27,2,this)"><span class="dot"></span>Sí. Lo sé y encuentro razones para no actuar.</div>
+    <div class="opt" onclick="pick(27,1,this)"><span class="dot"></span>Sí, claramente. Y la razón de fondo es el miedo a lo que pasa si lo cambio.</div>
+  </div></div>
+
+  <div class="qcard" id="q28" style="display:none"><div class="qnum">28 / 28 · Final</div><div class="qtext">Si pudieras hablarle al operador que eras hace tres años — el que empezó este ciclo — ¿qué le dirías?</div><div class="opts">
+    <div class="opt" onclick="pick(28,4,this)"><span class="dot"></span>"Vas por buen camino. Confía en el proceso."</div>
+    <div class="opt" onclick="pick(28,3,this)"><span class="dot"></span>"Cuídate más. El resultado importa, pero no a cualquier costo."</div>
+    <div class="opt" onclick="pick(28,2,this)"><span class="dot"></span>"Para. Revisa. Esto no está funcionando aunque lo parezca."</div>
+    <div class="opt" onclick="pick(28,1,this)"><span class="dot"></span>"Lo que estás construyendo sobre esas bases se va a caer. Todavía estás a tiempo."</div>
+  </div></div>
+
+  <!-- PAUSA FINAL -->
+  <div class="pausa" id="p-final" style="display:none">
+    <p>Llegaste al final del protocolo.</p>
+    <p><strong>Una vez que tienes el conocimiento, ya no puedes seguir culpando a lo externo.</strong> El siguiente paso es ver tu reporte — el primero honesto que probablemente tienes de tu sistema real.</p>
+    <button class="btn btn-p" onclick="goEmail()" style="margin-top:12px;">Ver mi Reporte de Riesgo Sistémico →</button>
+    <div class="nav-warn" id="nw">Responde todas las preguntas para continuar.</div>
+  </div>
+
+</div><!-- /quiz -->
+
+
+<!-- EMAIL -->
+<div class="screen" id="s-email">
+<div class="email-wrap">
+  <h2>Tu reporte está listo.</h2>
+  <p class="sub">Para generarlo necesito tu nombre — sin apellidos — y el correo donde quieres recibirlo. Este reporte no va a ningún otro lado.</p>
+  <div class="field-g"><label class="field-lbl">Tu nombre</label><input type="text" class="field-in" id="iName" placeholder="Solo tu nombre" /><div class="field-err" id="eNm">Escribe tu nombre para continuar.</div></div>
+  <div class="field-g"><label class="field-lbl">Tu correo</label><input type="email" class="field-in" id="iEmail" placeholder="correo@ejemplo.com" /><div class="field-err" id="eEm">Ingresa un correo válido.</div></div>
+  <button class="btn btn-p" onclick="submitCapture()" style="margin-top:8px;">Generar mi reporte →</button>
+</div>
+</div>
+
+
+<!-- RESULT -->
+<div class="screen" id="s-result">
+<div class="result-wrap">
+  <div class="sys-tag" style="margin-top:60px;">Reporte de Riesgo Sistémico · PAO Umbral</div>
+  <h1 id="rtitle">Tu mapa de microfracturas</h1>
+  <p class="r-intro" id="rintro"></p>
+  <div class="score-box">
+    <div><div class="score-lbl">Puntaje del sistema</div><div class="score-val" id="rscore">—</div></div>
+    <div class="profile-tag" id="rtag">—</div>
+  </div>
+  <div class="dim-grid">
+    <div class="dim-card"><div class="dim-hdr"><div class="dim-lbl">C — Cuerpo · Hardware</div><div class="dim-sc" id="scC">—</div></div><div class="dim-bw"><div class="dim-b" id="bC" style="width:0%"></div></div><div class="dim-desc" id="dcC"></div></div>
+    <div class="dim-card"><div class="dim-hdr"><div class="dim-lbl">S — Sistema · Software</div><div class="dim-sc" id="scS">—</div></div><div class="dim-bw"><div class="dim-b" id="bS" style="width:0%"></div></div><div class="dim-desc" id="dcS"></div></div>
+    <div class="dim-card"><div class="dim-hdr"><div class="dim-lbl">I — Identidad · Señal</div><div class="dim-sc" id="scI">—</div></div><div class="dim-bw"><div class="dim-b" id="bI" style="width:0%"></div></div><div class="dim-desc" id="dcI"></div></div>
+  </div>
+  <div class="gri-sec"><h2>Las 2 grietas más urgentes</h2><div id="gri-box"></div></div>
+  <div class="pausa" style="margin-top:32px;">
+    <p style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);margin-bottom:14px;">Protocolo de Emergencia C-01 — Primeras 24 horas</p>
+    <p>Antes de cualquier estrategia: baja el cortisol. No es metáfora. Es biología.</p>
+    <p><strong>Hoy:</strong> Movimiento físico de alta intensidad, 20 minutos mínimo. Agota la química del estrés antes de que tome decisiones por ti.</p>
+    <p><strong>Esta noche:</strong> Sin pantallas 45 minutos antes de dormir. Sin métricas, sin mensajes pendientes. El sistema nervioso necesita la señal de que la amenaza terminó.</p>
+    <p><strong>Mañana temprano:</strong> Antes de abrir el teléfono, escribe en papel tres respuestas a: "¿Qué está consumiendo más energía de mi sistema esta semana?" No para resolverlo. Solo para nombrarlo.</p>
+  </div>
+  <div class="cta-block">
+    <p>El Reporte completo llega a tu correo. El siguiente paso real:</p>
+    <a href="https://nas.io/umbral/forms/nunca-lo-vas-a-lograr" target="_blank" class="btn btn-p">Lista de espera — 16 de mayo →</a>
+    <a href="https://nas.io/es-mx/umbral/home" target="_blank" class="btn btn-g">Entrar a la Comunidad Umbral (gratis)</a>
+  </div>
+</div>
+</div>
+
+</div><!-- /shell -->
+
+<div class="status"><span>PAO · Protocolo de Autopsia Operativa</span><span>Umbral · Sistema de Reconstrucción del Operador Humano</span></div>
+
+<script>
+const WEBHOOK = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT";
+const A = {};
+let userName = "", userEmail = "", horaInicio = null, tagPerfil = "";
+
+const DIM = {
+  C:[1,2,3,4,5,6,7],
+  S:[8,9,10,11,12,13,14,15],
+  I:[16,17,18,19,20,21,22,23,24,25,26,27,28]
+};
+
+function upd(){
+  const n=Object.keys(A).length, t=28;
+  document.getElementById('pf').style.width=(n/t*100)+'%';
+  document.getElementById('pl').textContent=n+'/'+t+' · PAO';
+}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
+function showEl(id){const e=document.getElementById(id);if(e){e.style.display='block';setTimeout(()=>e.scrollIntoView({behavior:'smooth',block:'start'}),100);}}
+
+function startPAO(){horaInicio=new Date().toISOString();show('s-quiz');upd();showEl('q1');}
+
+function pick(q,v,el){
+  el.parentNode.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  A[q]=v; upd();
+  setTimeout(()=>flow(q),350);
+}
+
+function flow(q){
+  q=parseInt(q);
+  if(q===7){showEl('p1');return;}
+  if(q===15){showEl('p2');return;}
+  if(q===22){showEl('hdr-deep');showEl('q23');return;}
+  if(q===28){showEl('p-final');return;}
+  if(q<28)showEl('q'+(q+1));
+}
+
+function nextBlk(d){
+  if(d==='S'){showEl('hdr-S');showEl('q8');}
+  else if(d==='I'){showEl('hdr-I');showEl('q16');}
+}
+
+function goEmail(){
+  if(Object.keys(A).length<28){document.getElementById('nw').style.display='block';return;}
+  show('s-email');
+}
+
+function submitCapture(){
+  const nm=document.getElementById('iName').value.trim();
+  const em=document.getElementById('iEmail').value.trim();
+  let ok=true;
+  if(!nm){document.getElementById('eNm').style.display='block';ok=false;}else{document.getElementById('eNm').style.display='none';}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){document.getElementById('eEm').style.display='block';ok=false;}else{document.getElementById('eEm').style.display='none';}
+  if(!ok)return;
+  userName=nm;userEmail=em;
+  calcResult();sendData();
+}
+
+function calcResult(){
+  const sC=DIM.C.reduce((s,q)=>s+(A[q]||0),0);
+  const sS=DIM.S.reduce((s,q)=>s+(A[q]||0),0);
+  const sI=DIM.I.reduce((s,q)=>s+(A[q]||0),0);
+  const tot=sC+sS+sI;
+  const maxC=28,maxS=32,maxI=52,maxT=112;
+  const pC=Math.round(sC/maxC*100),pS=Math.round(sS/maxS*100),pI=Math.round(sI/maxI*100),pT=Math.round(tot/maxT*100);
+
+  let tag,col;
+  if(pT<=35){tag="FRACTURA ACTIVA";col="#8C3030";}
+  else if(pT<=52){tag="SISTEMA BAJO PRESIÓN";col="#F4A261";}
+  else if(pT<=68){tag="OPERANDO EN LÍMITE";col="#E8C36A";}
+  else{tag="SISTEMA CON BASE";col="#5CDB95";}
+  tagPerfil=tag;
+
+  show('s-result');
+
+  const titles={
+    "FRACTURA ACTIVA":"El sistema ya acusa daño estructural.",
+    "SISTEMA BAJO PRESIÓN":"El sistema opera con carga que excede su capacidad.",
+    "OPERANDO EN LÍMITE":"Funcionas. Estás en el límite que separa el control del colapso.",
+    "SISTEMA CON BASE":"Tu sistema tiene base. Hay grietas a trabajar con precisión."
+  };
+  const intros={
+    "FRACTURA ACTIVA":`${userName}, lo que describes no es cansancio temporal. Es un patrón que excedió su capacidad en más de una dimensión. El cuerpo lo registra, el sistema lo sostiene mal, la identidad pierde coherencia. Esto no es una condena — es información. La única pregunta que importa ahora es qué haces con ella.`,
+    "SISTEMA BAJO PRESIÓN":`${userName}, tu sistema funciona, pero absorbe más de lo que puede sostener sin costo acumulado. El desgaste todavía no es visible desde afuera. Por adentro, ya lleva un precio. El momento de actuar es antes de que el sistema te haga la decisión.`,
+    "OPERANDO EN LÍMITE":`${userName}, hay recursos. Hay estructura. Pero la presión acumulada está creando microfracturas que no ves porque el sistema sigue moviéndose. El límite no avisa antes de llegar — simplemente llega.`,
+    "SISTEMA CON BASE":`${userName}, tu base es real. Las grietas que muestra este protocolo no son urgencias — son puntos de trabajo preciso. Operar bien no es lo mismo que operar de forma sostenible al máximo.`
+  };
+
+  document.getElementById('rtitle').textContent=titles[tag];
+  document.getElementById('rintro').textContent=intros[tag];
+  document.getElementById('rscore').textContent=pT+'%';
+  const rt=document.getElementById('rtag');
+  rt.textContent=tag;rt.style.borderColor=col;rt.style.color=col;
+
+  renderDim('C',sC,maxC,pC);renderDim('S',sS,maxS,pS);renderDim('I',sI,maxI,pI);
+  renderGrietas(pC,pS,pI);
+}
+
+function renderDim(d,sc,mx,pct){
+  document.getElementById('sc'+d).textContent=sc+' / '+mx;
+  const b=document.getElementById('b'+d);
+  setTimeout(()=>{
+    b.style.width=pct+'%';
+    b.className='dim-b '+(pct<40?'crit':pct<60?'warn':'ok');
+  },300);
+  const descs={
+    C:{low:"El cuerpo envía señales activas que el sistema ignora. El cortisol no es una metáfora — literalmente gobierna cada decisión que crees que tomas con claridad.",mid:"Hay síntomas físicos normalizados que drenan capacidad de procesamiento como ruido de fondo constante.",high:"El cuerpo opera con relativa estabilidad. Mantenerlo requiere protocolos, no solo buenas intenciones."},
+    S:{low:"El sistema depende de ti para todo. Sin ti, colapsa. Eso no es un negocio — es una trampa con buena presentación.",mid:"Hay partes que funcionan, pero las decisiones importantes llegan desde el cansancio o la urgencia. El 70/30 empieza aquí.",high:"Hay estructura real. El trabajo puede sobrevivir momentos de ausencia. Es el punto desde el que se puede escalar sin destruirse."},
+    I:{low:"La identidad está fusionada con el rol. Si el rol falla, la persona también. El Fantasma lleva tiempo operando con tu nombre.",mid:"Hay inercia. Se hace lo que se hace porque se hacía. La señal es débil — y una señal débil atrae resultados débiles.",high:"Hay claridad en el para qué. La identidad no depende completamente de los resultados externos."}
+  };
+  const k=pct<40?'low':pct<65?'mid':'high';
+  document.getElementById('dc'+d).textContent=descs[d][k];
+}
+
+function renderGrietas(pC,pS,pI){
+  const cat=[
+    {c:()=>(A[1]||4)<=2,t:"Sueño como indicador de carga crítica",d:"El sistema nervioso no puede soltar la carga. Mientras eso no se corrija, cada decisión opera desde déficit biológico acumulado."},
+    {c:()=>(A[2]||4)<=2,t:"Dolor físico normalizado — señal ignorada",d:"El cuerpo lleva la cuenta. Van der Kolk lo documentó: el estrés crónico se archiva en el tejido antes de manifestarse como colapso."},
+    {c:()=>(A[3]||4)<=2,t:"Dependencia de estimulantes para operar",d:"Si el sistema no arranca solo, está en déficit crónico. Lo que llamas hábito ya es una muleta operativa."},
+    {c:()=>(A[6]||4)<=2,t:"Incapacidad de descansar sin culpa",d:"Cuando la calma se siente como amenaza, el sistema nervioso está en alerta permanente. No es falta de disciplina."},
+    {c:()=>(A[8]||4)<=2,t:"Dependencia operativa total — tú eres el sistema",d:"Si todo se cae cuando no estás, no construiste un sistema — construiste un empleo sin prestaciones ni horario."},
+    {c:()=>(A[10]||4)<=2,t:"Ciclo repetitivo de construcción y colapso",d:"Cuando el mismo resultado negativo se repite con diferentes variables, el error está en el firmware que las procesa."},
+    {c:()=>(A[9]||4)<=2,t:"Decisiones desde la urgencia como estado base",d:"Firmar contratos desde el Sistema 1 no es liderazgo bajo presión. Es supervivencia disfrazada de estrategia."},
+    {c:()=>(A[14]||3)<=1,t:"Identidad fusionada con el rol",d:"El proyecto puede fallar. La persona no tiene que fallar con él. Pero mientras no se separen, el riesgo es sistémico."},
+    {c:()=>(A[21]||4)<=2,t:"Validación externa como combustible principal",d:"La validación es la única droga donde trabajas gratis y aun así terminas en deuda. El sistema que opera desde ahí no puede escalar."},
+    {c:()=>(A[24]||4)<=2,t:"Ausencia de nodos que digan la verdad",d:"Si tu círculo solo valida, no está operando como red — está operando como cámara de eco. Un mal nodo no te resta uno: te cuesta el sistema."},
+    {c:()=>(A[22]||4)<=2,t:"Proyección de ruptura — el sistema ya lo sabe",d:"Cuando el operador reconoce que algo se rompe si nada cambia, ese dato es más valioso que cualquier análisis externo."}
+  ];
+  const act=cat.filter(g=>g.c());
+  let res=act.length>=2?act.slice(0,2):[];
+  if(res.length<2){
+    const defs=[
+      {p:pC,t:"Carga biológica acumulada",d:"El hardware absorbe más de lo que puede procesar sin mantenimiento. Sin protocolo de recuperación, el sistema opera desde déficit permanente."},
+      {p:pS,t:"Sistema sin redundancia operativa",d:"Un sistema que funciona solo cuando tú estás presente no es un sistema — es una cadena."},
+      {p:pI,t:"Señal difusa — la inercia como motor",d:"Sin saber con claridad el para qué, cualquier fricción se convierte en obstáculo mayor de lo que debería."}
+    ].sort((a,b)=>a.p-b.p);
+    for(const d of defs){if(res.length>=2)break;res.push(d);}
+  }
+  const box=document.getElementById('gri-box');
+  box.innerHTML='';
+  res.slice(0,2).forEach(g=>{
+    const div=document.createElement('div');div.className='gri-card';
+    div.innerHTML=`<div class="gri-title">${g.t}</div><div class="gri-desc">${g.d}</div>`;
+    box.appendChild(div);
+  });
+}
+
+function sendData(){
+  const resp=[];
+  for(let i=1;i<=28;i++)resp.push(A[i]!==undefined?A[i]:'');
+  const sC=DIM.C.reduce((s,q)=>s+(A[q]||0),0);
+  const sS=DIM.S.reduce((s,q)=>s+(A[q]||0),0);
+  const sI=DIM.I.reduce((s,q)=>s+(A[q]||0),0);
+  const payload={nombre:userName,email:userEmail,puntajeTotal:sC+sS+sI,puntajeC:sC,puntajeS:sS,puntajeI:sI,respuestas:resp,horaInicio,horaFin:new Date().toISOString(),tagPerfil,dispositivo:navigator.userAgent.substring(0,100)};
+  const redir="https://nas.io/umbral/forms/nunca-lo-vas-a-lograr?email="+encodeURIComponent(userEmail);
+  if(!WEBHOOK||WEBHOOK.includes('PEGA')){console.log('PAO dev:',payload);setTimeout(()=>window.open(redir,'_blank'),3000);return;}
+  fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(()=>setTimeout(()=>window.open(redir,'_blank'),3000))
+  .catch(()=>setTimeout(()=>window.open(redir,'_blank'),3000));
+}
+
+document.addEventListener('DOMContentLoaded',()=>show('s-intro'));
+</script>
 </body>
 </html>
