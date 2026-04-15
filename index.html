@@ -579,12 +579,38 @@ function sendData(){
   const sC=DIM.C.reduce((s,q)=>s+(A[q]||0),0);
   const sS=DIM.S.reduce((s,q)=>s+(A[q]||0),0);
   const sI=DIM.I.reduce((s,q)=>s+(A[q]||0),0);
-  const payload={nombre:userName,email:userEmail,puntajeTotal:sC+sS+sI,puntajeC:sC,puntajeS:sS,puntajeI:sI,respuestas:resp,horaInicio,horaFin:new Date().toISOString(),tagPerfil,dispositivo:navigator.userAgent.substring(0,100)};
-  const redir="https://nas.io/umbral/forms/nunca-lo-vas-a-lograr?email="+encodeURIComponent(userEmail);
-  if(!WEBHOOK||WEBHOOK.includes('PEGA')){console.log('PAO dev:',payload);setTimeout(()=>window.open(redir,'_blank'),3000);return;}
-  fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-  .then(()=>setTimeout(()=>window.open(redir,'_blank'),3000))
-  .catch(()=>setTimeout(()=>window.open(redir,'_blank'),3000));
+  
+  // Preparamos los datos como formulario para evitar el bloqueo de Google (CORS)
+  const formData = new URLSearchParams();
+  formData.append('nombre', userName);
+  formData.append('email', userEmail);
+  formData.append('puntajeTotal', sC+sS+sI);
+  formData.append('puntajeC', sC);
+  formData.append('puntajeS', sS);
+  formData.append('puntajeI', sI);
+  formData.append('tagPerfil', tagPerfil);
+  formData.append('respuestas', resp.join(" | "));
+  formData.append('horaFin', new Date().toISOString());
+  formData.append('dispositivo', navigator.userAgent.substring(0,100));
+
+  const redir="https://nas.com/es-mx/umbral/home";
+  
+  // Si no has pegado la URL, solo muestra en consola
+  if(!WEBHOOK||WEBHOOK.includes('PEGA')){
+    console.log('PAO dev:', Object.fromEntries(formData));
+    setTimeout(()=>window.open(redir,'_blank'),2000);
+    return;
+  }
+
+  // El truco mágico: mode 'no-cors' y body como string de formulario
+  fetch(WEBHOOK, {
+    method: 'POST',
+    mode: 'no-cors', 
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString()
+  })
+  .then(() => setTimeout(() => window.open(redir,'_blank'), 500))
+  .catch(() => setTimeout(() => window.open(redir,'_blank'), 500));
 }
 
 document.addEventListener('DOMContentLoaded',()=>show('s-intro'));
