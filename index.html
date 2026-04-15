@@ -580,7 +580,6 @@ function sendData(){
   const sS=DIM.S.reduce((s,q)=>s+(A[q]||0),0);
   const sI=DIM.I.reduce((s,q)=>s+(A[q]||0),0);
   
-  // Preparamos los datos como formulario para evitar el bloqueo de Google (CORS)
   const formData = new URLSearchParams();
   formData.append('nombre', userName);
   formData.append('email', userEmail);
@@ -593,24 +592,29 @@ function sendData(){
   formData.append('horaFin', new Date().toISOString());
   formData.append('dispositivo', navigator.userAgent.substring(0,100));
 
-  const redir="https://nas.com/es-mx/umbral/home";
+  // LA NUEVA DIRECCIÓN DE UMBRAL:
+  const redir = "https://nas.com/es-mx/umbral/home";
   
-  // Si no has pegado la URL, solo muestra en consola
-  if(!WEBHOOK||WEBHOOK.includes('PEGA')){
+  if(!WEBHOOK || WEBHOOK.includes('PEGA')){
     console.log('PAO dev:', Object.fromEntries(formData));
-    setTimeout(()=>window.open(redir,'_blank'),2000);
+    setTimeout(() => window.location.href = redir, 1500);
     return;
   }
 
-  // El truco mágico: mode 'no-cors' y body como string de formulario
   fetch(WEBHOOK, {
     method: 'POST',
     mode: 'no-cors', 
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: formData.toString()
   })
-  .then(() => setTimeout(() => window.open(redir,'_blank'), 500))
-  .catch(() => setTimeout(() => window.open(redir,'_blank'), 500));
+  .then(() => {
+    console.log("Datos enviados al búnker.");
+    setTimeout(() => window.location.href = redir, 500);
+  })
+  .catch(() => {
+    console.log("Error de red, pero redirigiendo...");
+    setTimeout(() => window.location.href = redir, 500);
+  });
 }
 
 document.addEventListener('DOMContentLoaded',()=>show('s-intro'));
