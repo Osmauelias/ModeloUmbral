@@ -3,5 +3,5 @@ compatibility_date = "2026-09-07"
 [[d1_databases]]
 binding = "DB"
 database_name = "pao-micro-v2-1"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "f0d5cdf3-a611-40a3-81a4-7fa9851264b2"
 migrations_dir = "migrations"
