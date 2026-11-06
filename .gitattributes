@@ -1,0 +1,31 @@
+# UMBRAL — .gitattributes template V1
+# Owner instruction 2026-11-06: uniform LF for text across Codex, Claude and workers.
+# Control: Osmauelias/umbral-documentador/SPECS/UMBRAL_EXECUTOR_FORMAT_AND_PUBLISH_CHECKLIST_V1.md
+* text=auto eol=lf
+
+# Windows command-script compatibility exceptions.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary/media files must never receive text conversion.
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.webp -text
+*.ico -text
+*.pdf -text
+*.zip -text
+*.7z -text
+*.gz -text
+*.mp4 -text
+*.mov -text
+*.mp3 -text
+*.wav -text
+*.woff -text
+*.woff2 -text
+*.exe -text
+*.dll -text
+
+# This rule does not rewrite existing history or worktrees.
+# Existing malformed blobs require separate review; never mass-renormalize implicitly.
